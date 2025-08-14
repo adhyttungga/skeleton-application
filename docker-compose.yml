@@ -1,0 +1,25 @@
+version: "1.0.0"
+services:
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: ./services/user-service/.env.dev
+    # environment:
+    #   - MONGO_URI=${MONGO_URI}
+    #   - MONGO_DATABASE=${MONGO_DATABASE}
+    #   - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    #   - MODE=${MODE}
+    #   - PORT=${PORT}
+    #   - HOST=${HOST}
+    networks:
+      - sk-app-net
+    external_links:
+      - sk-app-mongo:sk-app-mongo
+
+networks:
+  sk-app-net:
+    external: true
