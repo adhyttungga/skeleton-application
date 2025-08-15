@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Create godoc
+// CreateTags godoc
 // @Summary Create a new user
 // @Description Create a new user with the provided details
 // @Tags User
@@ -33,11 +33,10 @@ func (hd *UserHandlerImpl) Create(c *gin.Context) {
 		return
 	}
 
-	if err := hd.UserUsecase.Create(c, &req); err != nil {
+	token, err := hd.UserUsecase.Create(c, &req)
+	if err != nil {
 		var ve validator.ValidationErrors
-		// Return bad request if error from validator or
-		// duplicate key error. Default is Internal server error
-		if errors.As(err, &ve) {
+		if errors.As(err, &ve) { // 404: validate field
 			out := make([]utils.ErrorAPI, len(ve))
 			for i, fe := range ve {
 				out[i] = utils.ErrorAPI{
@@ -46,14 +45,14 @@ func (hd *UserHandlerImpl) Create(c *gin.Context) {
 				}
 			}
 			c.JSON(http.StatusBadRequest, gin.H{"error": out})
-		} else if mongo.IsDuplicateKeyError(err) {
+		} else if mongo.IsDuplicateKeyError(err) { // 404: unique email
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": []utils.ErrorAPI{{
 					Field: "Email",
 					Msg:   fmt.Sprintf("User already exists with email: %s", req.Email),
 				}},
 			})
-		} else {
+		} else { // 500: default
 			c.JSON(http.StatusInternalServerError, gin.H{"error": []utils.ErrorAPI{{
 				Field: "",
 				Msg:   "Failed to create user",
@@ -62,5 +61,6 @@ func (hd *UserHandlerImpl) Create(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("jwt", token, (15 * 24 * 60 * 60), "/", "", false, true) // Max. age 15 days
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "user": req})
 }

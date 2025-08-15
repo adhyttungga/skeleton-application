@@ -17,11 +17,13 @@ type Origin struct {
 }
 
 type ServerConfig struct {
-	Mode     string `env:"MODE" envDefault:"development"`
-	Port     string `env:"PORT" envDefault:"8080"`
-	Host     string `env:"HOST" envDefault:"localhost"`
-	Database Database
-	Origin   Origin
+	Mode       string `env:"MODE" envDefault:"development"`
+	Port       string `env:"PORT" envDefault:"8080"`
+	Host       string `env:"HOST" envDefault:"localhost"`
+	Database   Database
+	Origin     Origin
+	PrivateKey string `env:"PRIVATE_KEY"`
+	PublicKey  string `env:"PUBLIC_KEY"`
 }
 
 var Config ServerConfig
