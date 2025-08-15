@@ -7,7 +7,7 @@ import (
 )
 
 type UserUsecase interface {
-	Create(c context.Context, user *models.User) error
+	Create(c context.Context, user *models.User) (string, error)
 	Fetch(c context.Context, id string) (*models.User, error)
 	ListAll(c context.Context) (*[]models.User, error)
 	Update(c context.Context, id string, user *models.User) error

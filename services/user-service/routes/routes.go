@@ -4,10 +4,13 @@ import (
 	"strings"
 	"time"
 
+	auth_handler "github.com/adhyttungga/skeleton-application/services/user-service/api/v1/auth"
 	user_handler "github.com/adhyttungga/skeleton-application/services/user-service/api/v1/user"
 	"github.com/adhyttungga/skeleton-application/services/user-service/config"
 	repository "github.com/adhyttungga/skeleton-application/services/user-service/internal/repository/mongo"
+	auth_usecase "github.com/adhyttungga/skeleton-application/services/user-service/internal/usecase/auth"
 	user_usecase "github.com/adhyttungga/skeleton-application/services/user-service/internal/usecase/user"
+	"github.com/adhyttungga/skeleton-application/services/user-service/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -35,17 +38,24 @@ func NewRouter(DB *mongo.Database) *gin.Engine {
 
 	// Initialize user usecase
 	userUsecase := user_usecase.NewUserUsecase(repository, validate)
+	authUsecase := auth_usecase.NewAuthUsecase(repository, validate)
 
 	// Initialize user handler
 	userHandler := user_handler.NewUserHandler(userUsecase)
+	authHandler := auth_handler.NewAuthHandler(authUsecase)
 
 	userRoutes := router.Group("/api/v1/user")
 	{
 		userRoutes.POST("/", userHandler.Create)
-		userRoutes.GET("/", userHandler.ListAll)
-		userRoutes.GET("/:id", userHandler.Fetch)
-		userRoutes.PUT("/:id", userHandler.Update)
-		userRoutes.DELETE("/:id", userHandler.Delete)
+		userRoutes.Use(middleware.ProtectRoute()).GET("/", userHandler.ListAll)
+		userRoutes.Use(middleware.ProtectRoute()).GET("/:id", userHandler.Fetch)
+		userRoutes.Use(middleware.ProtectRoute()).PUT("/:id", userHandler.Update)
+		userRoutes.Use(middleware.ProtectRoute()).DELETE("/:id", userHandler.Delete)
+	}
+	authRoutes := router.Group("/api/v1/auth")
+	{
+		authRoutes.POST("/signin", authHandler.SignIn)
+		authRoutes.POST("/signout", authHandler.SignOut)
 	}
 
 	return router
